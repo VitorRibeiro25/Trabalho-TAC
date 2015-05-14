@@ -1,6 +1,12 @@
+MOSTRA MACRO STR 
+MOV AH,09H
+LEA DX,STR 
+INT 21H
+ENDM
+
 .8086
-.model small
-.stack 2048h
+.model	small
+.stack	2048h
 dados	segment	para	'data'
 menu_inicial	db	10,13,10,13,"Trabalho de TAC",10,13,10,13
 				db 	10,13,"Rafael Francisco (21230528)",13,10
@@ -11,6 +17,10 @@ menu_inicial	db	10,13,10,13,"Trabalho de TAC",10,13,10,13
 				db 	"3 - Sair",13,10,13,10,13,10
 				db	"Opcao:$"
 				
+menu_estatistica	db	10,13,10,13,"Menu dos dados estatisticos dos seus jogos:",13,10,13,10
+					db	"1 - Historico de jogos",13,10,13,10
+					db	"2 - Valores de Referencia",13,10,13,10
+					
 mes_erro		db	10,13,"Opcao escolhida e invalida",13,10,13,10
 
 dados ends
@@ -37,7 +47,41 @@ jogo_inicio endp
 
 el_estatisticos proc
 
+c_menu: mov ah, 09h
+	lea dx, menu_estatistica
+	cmp al, '1'
+	jl msg_erro
+	cmp al, '3'
+	jg msg_erro
+	cmp al, '1'
+	je historico
+	cmp al, '2'
+	je valores
+	cmp al, '3'
+	je voltar
+
+voltar: call main
+
+msg_erro: mov ah, 09h
+	lea dx, mes_erro
+	int 21h
+	jmp c_menu
+	
+historico: call c_historico
+	mov ah, 4ch
+	int 21h
+valores: call c_valores
+	mov ah, 4ch
+	int 21h
 el_estatisticos endp
+
+c_historico proc
+
+c_historico endp
+
+c_valores proc
+
+c_valores endp
 
 main proc
 
