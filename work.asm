@@ -1,4 +1,3 @@
-; dados fornecidos pelo professor
 MOSTRA MACRO STR 
 MOV AH,09H
 LEA DX,STR 
@@ -55,7 +54,7 @@ dseg    segment para public 'data'
 		num				db		0
 		MAXDIG			db		7
 		resultado		db		99 dup (32)
-		resposta		dw		9 dup (?)
+		resposta		db		9 dup (?)
 		
         Fich         	db      'DADOS.TXT',0
 		Fich2			db 		'RES.TXT', 0
@@ -74,10 +73,10 @@ dseg    segment para public 'data'
 		
 		pedevalores		db	13,10,"Introudza o resultado da operacao:$"
 		valores_int		db 	"A SUA RESPOSTA:",13,10
-		valores_jogos	db 	"Numero total de jogos realizados:$",13,10
-		valores_best	db	"Melhor pontuação obtida em todos os jogos:$",13,10
-		valores_bad		db	"Pior pontuação obtida em todos os jogos:$",13,10
-		valores_media	db	"Media de pontuação obtida em todos os jogos:$",13,10
+		valores_jogos	db 	"Numero total de jogos realizados:",13,10
+		valores_best	db	"Melhor pontuação obtida em todos os jogos:",13,10
+		valores_bad		db	"Pior pontuação obtida em todos os jogos:",13,10
+		valores_media	db	"Media de pontuação obtida em todos os jogos:",13,10
 		
 dseg    ends
 
@@ -110,7 +109,7 @@ APAGA_ECRAN	ENDP
 		
 le_tecla proc 
 
-		mov	ah,01h
+		mov	ah,08h
 		int	21h
 		mov	ah,0
 		cmp	al,0
@@ -150,7 +149,7 @@ menu_jogo proc
 	je voltar
 
 ficheiro: call le_ficheiro
-jogar: call recebe_valor
+jogar: call Main
 voltar: call Main
 menu_jogo endp
 
@@ -182,18 +181,21 @@ historico_jogo endp
 valores_jogo proc
 
 	call APAGA_ECRAN
-	goto_xy	20,6
-	MOSTRA valores_jogo
-	goto_xy	20,8	
-	MOSTRA valores_best
-	goto_xy	20,10
-	MOSTRA valores_bad
-	goto_xy	20,12
-	MOSTRA valores_media
-	goto_xy 22,22
 	
+	MOV AH,09H
+	LEA DX, valores_jogos
+	INT 21H
+	MOV AH,09h
+	LEA DX, valores_best 
+	INT 21H
+	MOV AH,09H
+	LEA DX, valores_bad
+	INT 21H
+	MOV AH,09H
+	LEA DX, valores_media 
+	INT 21H
 	
-sai: call menu_esta
+	RET
 valores_jogo endp
 
 compara proc
@@ -246,41 +248,113 @@ compara_2 proc
 compara_2 endp
 
 recebe_valor proc
+
+	mov cx, 6
+	call APAGA_ECRAN
 	xor si, si
+	mov POSx, 10
+	mov POSy, 12
+
 ciclo:
-	mov ah, 09h 
-	lea dx, pedevalores
-	int 21h
+	goto_xy 10,12
 	call le_tecla
-	mov resposta[si], ax
-	
-	mov     ah, 02h			; anda com o cursor uma linha para baixo
-	mov		dl, 10
-	int		21h
-	
-	mov ax, 00h
+teclaUm:
+	cmp al, 31h
+	jne teclaDois
+	mov resposta[si], al
 	inc si
-	cmp si, 10
-	je sai
+	inc POSx
+	jmp teclaUm
+teclaDois:
+	cmp al, 32h
+	jne teclaTres
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaDois
+teclaTres:
+	cmp al, 33h
+	jne teclaQuatro
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaTres
+	
+teclaQuatro:
+	cmp al, 34h
+	jne teclaCinco
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaQuatro
+
+teclaCinco:
+	cmp al, 35h
+	jne teclaSeis
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaCinco
+
+teclaSeis:
+	cmp al, 36h
+	jne teclaSete
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaSeis
+
+teclaSete:
+	cmp al, 37h
+	jne teclaOito
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaSete
+
+teclaOito:
+	cmp al, 38h
+	jne teclaNove
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaOito
+
+teclaNove:
+	cmp al, 39h
+	jne teclaZero
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaNove
+	
+teclaZero:
+	cmp al, 00h
+	jne teclaEnter
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaZero
+
+teclaEnter:
+	cmp al, 0Dh
+	jne salta
+	mov resposta[si], al
+	inc si
+	inc POSx
+	jmp teclaEnter
+
+salta:
+	cmp ax, 0
 	jmp ciclo
-	
-sai: call Main
-	
+	jne sai
+
+sai: call menu_jogo
+
 recebe_valor endp
 
 
 mostra_resultado proc
-	mov cx, 9
-	xor si, si
-	lea dx, valores_int
-ciclo:
-	mov bx, resposta[si]
-	mov dl, bh
-	
-	mov ah, 2
-	int 21h
-	inc si
-	loop ciclo
 	
 call menu_jogo
 
@@ -519,7 +593,7 @@ ciclo:
 
 ler_ficheiro: call menu_jogo
 estatisticas: call menu_esta
-pede_uti: call compara_2
+pede_uti: call valores_jogo
 
 sai:
         mov     ah,4ch
